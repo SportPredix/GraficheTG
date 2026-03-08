@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grafiche Tipster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="layout">
+    <section class="controls card">
+      <div class="title-wrap">
+        <p class="eyebrow">Tool Grafica</p>
+        <h1>Generatore Tipster</h1>
+        <p class="subtitle">Compila i campi, visualizza la preview e scarica il PNG.</p>
+      </div>
+
+      <div class="grid two-col">
+        <label>
+          Campionato
+          <select id="competitionSelect"></select>
+        </label>
+        <label>
+          Giornata / Sottotitolo
+          <input id="matchday" type="text" value="Esiti 28° Giornata">
+        </label>
+      </div>
+
+      <div class="grid two-col">
+        <label>
+          Turno
+          <select id="roundSelect"></select>
+        </label>
+        <label>
+          Calendario
+          <input id="calendarTag" type="text" value="Serie A 2025/26" readonly>
+        </label>
+      </div>
+
+      <div class="grid two-col">
+        <label>
+          Colore Primario
+          <input id="primaryColor" type="color" value="#031211">
+        </label>
+        <label>
+          Colore Secondario
+          <input id="secondaryColor" type="color" value="#11b9a8">
+        </label>
+      </div>
+
+      <div class="actions-inline">
+        <button id="addRow" type="button">Aggiungi Partita</button>
+      </div>
+
+      <div id="rowsEditor" class="rows-editor"></div>
+
+      <div class="actions-inline">
+        <button id="downloadPng" type="button" class="accent">Scarica PNG</button>
+      </div>
+    </section>
+
+    <section class="preview card">
+      <p class="preview-label">Anteprima</p>
+      <div class="preview-wrap">
+        <div id="graphic" class="graphic">
+          <header class="graphic-header">
+            <div>
+              <h2 id="previewLeague">SERIE A</h2>
+              <p id="previewMatchday">Esiti 28° Giornata</p>
+            </div>
+          </header>
+          <div id="matchesList" class="matches-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="serie-a-2025-26.js"></script>
+  <script src="premier-league-2025-26.js"></script>
+  <script src="la-liga-2025-26.js"></script>
+  <script src="bundesliga-2025-26.js"></script>
+  <script src="ligue-1-2025-26.js"></script>
+  <script src="champions-league-2025-26.js"></script>
+  <script src="europa-league-2024-25.js"></script>
+  <script src="conference-league-2024-25.js"></script>
+  <script src="coppa-italia-2024-25.js"></script>
+  <script src="fa-cup-2024-25.js"></script>
+  <script src="copa-del-rey-2024-25.js"></script>
+  <script src="dfb-pokal-2024-25.js"></script>
+  <script src="coupe-de-france-2024-25.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
