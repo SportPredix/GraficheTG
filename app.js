@@ -9,73 +9,97 @@ const rowsEditor = document.getElementById("rowsEditor");
 const matchesList = document.getElementById("matchesList");
 const previewLeague = document.getElementById("previewLeague");
 const previewMatchday = document.getElementById("previewMatchday");
+const previewWrap = document.getElementById("previewWrap");
+const graphicScaleBox = document.getElementById("graphicScaleBox");
 const graphic = document.getElementById("graphic");
+
+const DEFAULT_SUBTITLE = "Pronostici esclusivi t.me/sportpredix";
+const GRAPHIC_BASE_WIDTH = 1200;
 
 const COMPETITIONS = [
   {
     id: "serie-a-2025-26",
     label: "Serie A 2025/26",
-    dataKey: "SERIE_A_2025_26"
+    dataKey: "SERIE_A_2025_26",
+    colors: { primary: "#004aac", secondary: "#2ea6ff" }
   },
   {
     id: "premier-league-2025-26",
     label: "Premier League 2025/26",
-    dataKey: "PREMIER_LEAGUE_2025_26"
+    dataKey: "PREMIER_LEAGUE_2025_26",
+    colors: { primary: "#2d0a4b", secondary: "#ff2c8f" }
   },
   {
     id: "la-liga-2025-26",
     label: "La Liga 2025/26",
-    dataKey: "LA_LIGA_2025_26"
+    dataKey: "LA_LIGA_2025_26",
+    colors: { primary: "#ff5a00", secondary: "#ffb200" }
   },
   {
     id: "bundesliga-2025-26",
     label: "Bundesliga 2025/26",
-    dataKey: "BUNDESLIGA_2025_26"
+    dataKey: "BUNDESLIGA_2025_26",
+    colors: { primary: "#181818", secondary: "#d90429" }
   },
   {
     id: "ligue-1-2025-26",
     label: "Ligue 1 2025/26",
-    dataKey: "LIGUE_1_2025_26"
+    dataKey: "LIGUE_1_2025_26",
+    colors: { primary: "#0a1f44", secondary: "#c6f600" }
   },
   {
     id: "champions-league-2025-26",
     label: "Champions League 2025/26",
-    dataKey: "CHAMPIONS_LEAGUE_2025_26"
+    dataKey: "CHAMPIONS_LEAGUE_2025_26",
+    colors: { primary: "#0a1e5e", secondary: "#2e86ff" }
   },
   {
     id: "europa-league-2024-25",
     label: "Europa League 2024/25",
-    dataKey: "EUROPA_LEAGUE_2024_25"
+    dataKey: "EUROPA_LEAGUE_2024_25",
+    colors: { primary: "#171717", secondary: "#ff7b00" }
   },
   {
     id: "conference-league-2024-25",
     label: "Conference League 2024/25",
-    dataKey: "CONFERENCE_LEAGUE_2024_25"
+    dataKey: "CONFERENCE_LEAGUE_2024_25",
+    colors: { primary: "#0f1f14", secondary: "#18b56a" }
   },
   {
     id: "coppa-italia-2024-25",
     label: "Coppa Italia 2024/25",
-    dataKey: "COPPA_ITALIA_2024_25"
+    dataKey: "COPPA_ITALIA_2024_25",
+    colors: { primary: "#0072ce", secondary: "#00a884" }
   },
   {
     id: "fa-cup-2024-25",
     label: "FA Cup 2024/25",
-    dataKey: "FA_CUP_2024_25"
+    dataKey: "FA_CUP_2024_25",
+    colors: { primary: "#114e96", secondary: "#d71a2f" }
   },
   {
     id: "copa-del-rey-2024-25",
     label: "Copa del Rey 2024/25",
-    dataKey: "COPA_DEL_REY_2024_25"
+    dataKey: "COPA_DEL_REY_2024_25",
+    colors: { primary: "#a3121f", secondary: "#f4b400" }
   },
   {
     id: "dfb-pokal-2024-25",
     label: "DFB Pokal 2024/25",
-    dataKey: "DFB_POKAL_2024_25"
+    dataKey: "DFB_POKAL_2024_25",
+    colors: { primary: "#111111", secondary: "#e4002b" }
   },
   {
     id: "coupe-de-france-2024-25",
     label: "Coupe de France 2024/25",
-    dataKey: "COUPE_DE_FRANCE_2024_25"
+    dataKey: "COUPE_DE_FRANCE_2024_25",
+    colors: { primary: "#1f4aa8", secondary: "#de2033" }
+  },
+  {
+    id: "personale",
+    label: "Personale",
+    dataKey: "PERSONAL_LEAGUE",
+    colors: { primary: "#031211", secondary: "#11b9a8" }
   }
 ];
 
@@ -166,7 +190,16 @@ function getRoundLabel(calendarData, roundId) {
 }
 
 function buildDefaultSubtitle(calendarData, roundId) {
-  return `Esiti ${getRoundLabel(calendarData, roundId)}`;
+  const roundKey = String(roundId || "");
+  const roundLabel = getRoundLabel(calendarData, roundKey);
+
+  let suffix = roundKey;
+  if (!/^\d+$/.test(suffix)) {
+    const labelNumber = String(roundLabel).match(/\d+/);
+    suffix = labelNumber ? labelNumber[0] : roundLabel;
+  }
+
+  return `${DEFAULT_SUBTITLE} - Giornata ${suffix}`;
 }
 
 function populateCompetitionSelect() {
@@ -206,7 +239,7 @@ function loadRound(roundId, options = {}) {
   const calendarData = getCalendarData();
   const roundIds = getRoundIds(calendarData);
   if (!roundIds.length) {
-    state.rows = [createRow()];
+    state.rows = [];
     renderEditor();
     renderPreview();
     return;
@@ -225,10 +258,6 @@ function loadRound(roundId, options = {}) {
     state.rows = getRoundRows(calendarData, selectedRound);
   }
 
-  if (!state.rows.length) {
-    state.rows = [createRow()];
-  }
-
   if (!keepSubtitle) {
     matchdayInput.value = buildDefaultSubtitle(calendarData, selectedRound);
   }
@@ -243,11 +272,17 @@ function loadCompetition(competitionId, options = {}) {
   state.currentCompetitionId = config.id;
   competitionSelect.value = config.id;
 
+  if (config.colors) {
+    primaryColorInput.value = config.colors.primary;
+    secondaryColorInput.value = config.colors.secondary;
+  }
+
   const calendarData = getCalendarData(config.id);
   if (!calendarData) {
     calendarTagInput.value = config.label;
     roundSelect.innerHTML = "";
-    state.rows = [createRow()];
+    state.rows = [];
+    matchdayInput.value = DEFAULT_SUBTITLE;
     renderEditor();
     renderPreview();
     return;
@@ -356,7 +391,7 @@ function renderPreview() {
   if (!matchdayInput.value.trim() && state.currentRoundId) {
     previewMatchday.textContent = buildDefaultSubtitle(calendarData, state.currentRoundId);
   } else {
-    previewMatchday.textContent = matchdayInput.value || "Esiti";
+    previewMatchday.textContent = matchdayInput.value || DEFAULT_SUBTITLE;
   }
 
   graphic.style.setProperty("--primary", primaryColorInput.value);
@@ -368,20 +403,51 @@ function renderPreview() {
         Nessuna partita inserita
       </div>
     `;
+    updatePreviewScale();
     return;
   }
 
   matchesList.innerHTML = state.rows.map(matchRowTemplate).join("");
+  updatePreviewScale();
+}
+
+function updatePreviewScale() {
+  if (!previewWrap || !graphicScaleBox || !graphic) {
+    return;
+  }
+
+  const availableWidth = Math.max(280, previewWrap.clientWidth - 8);
+  const scale = Math.min(1, availableWidth / GRAPHIC_BASE_WIDTH);
+  const baseHeight = Math.max(680, graphic.scrollHeight || 680);
+
+  graphic.style.transform = `scale(${scale})`;
+  graphicScaleBox.style.width = `${GRAPHIC_BASE_WIDTH * scale}px`;
+  graphicScaleBox.style.height = `${baseHeight * scale}px`;
 }
 
 async function downloadPng() {
   const button = document.getElementById("downloadPng");
+  const exportHost = document.createElement("div");
+  let exportNode = null;
 
   try {
     button.disabled = true;
     button.textContent = "Creazione PNG...";
 
-    const canvas = await html2canvas(graphic, {
+    exportHost.style.position = "fixed";
+    exportHost.style.left = "-99999px";
+    exportHost.style.top = "0";
+    exportHost.style.zIndex = "-1";
+    exportHost.style.pointerEvents = "none";
+    document.body.appendChild(exportHost);
+
+    exportNode = graphic.cloneNode(true);
+    exportNode.style.transform = "none";
+    exportNode.style.width = `${GRAPHIC_BASE_WIDTH}px`;
+    exportNode.style.minHeight = "680px";
+    exportHost.appendChild(exportNode);
+
+    const canvas = await html2canvas(exportNode, {
       scale: 2,
       useCORS: true,
       backgroundColor: null
@@ -396,6 +462,12 @@ async function downloadPng() {
     console.error(error);
     alert("Errore durante l'esportazione PNG. Riprova.");
   } finally {
+    if (exportNode && exportNode.parentNode) {
+      exportNode.parentNode.removeChild(exportNode);
+    }
+    if (exportHost.parentNode) {
+      exportHost.parentNode.removeChild(exportHost);
+    }
     button.disabled = false;
     button.textContent = "Scarica PNG";
   }
@@ -403,6 +475,7 @@ async function downloadPng() {
 
 function boot() {
   populateCompetitionSelect();
+  matchdayInput.value = DEFAULT_SUBTITLE;
   loadCompetition(COMPETITIONS[0].id, { forceFresh: true });
 
   competitionSelect.addEventListener("change", () => {
@@ -425,6 +498,7 @@ function boot() {
   });
 
   document.getElementById("downloadPng").addEventListener("click", downloadPng);
+  window.addEventListener("resize", updatePreviewScale);
 }
 
 boot();

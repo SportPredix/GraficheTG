@@ -14,7 +14,7 @@
     <section class="controls card">
       <div class="title-wrap">
         <p class="eyebrow">Tool Grafica</p>
-        <h1>Generatore Tipster</h1>
+        <h1>Generatore Grafica Tipster</h1>
         <p class="subtitle">Compila i campi, visualizza la preview e scarica il PNG.</p>
       </div>
 
@@ -25,7 +25,7 @@
         </label>
         <label>
           Giornata / Sottotitolo
-          <input id="matchday" type="text" value="Esiti 28° Giornata">
+          <input id="matchday" type="text" value="Pronostici esclusivi t.me/sportpredix - Giornata 1">
         </label>
       </div>
 
@@ -64,21 +64,24 @@
 
     <section class="preview card">
       <p class="preview-label">Anteprima</p>
-      <div class="preview-wrap">
-        <div id="graphic" class="graphic">
-          <header class="graphic-header">
-            <div>
-              <h2 id="previewLeague">SERIE A</h2>
-              <p id="previewMatchday">Esiti 28° Giornata</p>
-            </div>
-          </header>
-          <div id="matchesList" class="matches-list"></div>
+      <div id="previewWrap" class="preview-wrap">
+        <div id="graphicScaleBox" class="graphic-scale-box">
+          <div id="graphic" class="graphic">
+            <header class="graphic-header">
+              <div>
+                <h2 id="previewLeague">SERIE A</h2>
+                <p id="previewMatchday">Pronostici esclusivi t.me/sportpredix - Giornata 1</p>
+              </div>
+            </header>
+            <div id="matchesList" class="matches-list"></div>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="personal-league.js"></script>
   <script src="serie-a-2025-26.js"></script>
   <script src="premier-league-2025-26.js"></script>
   <script src="la-liga-2025-26.js"></script>
