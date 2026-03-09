@@ -1,0 +1,55 @@
+{
+    "short_name": "graficheTG",
+    "name": "Grafiche Tipster",
+    "description": "Tool Grafica - Generatore Grafica Tipster",
+    "icons": [{
+          "src": "icons/48x48.png",
+          "type": "image/png",
+          "sizes": "48x48",
+          "purpose": "any"
+        },{
+          "src": "icons/72x72.png",
+          "type": "image/png",
+          "sizes": "72x72",
+          "purpose": "any"
+        },{
+          "src": "icons/128x128.png",
+          "type": "image/png",
+          "sizes": "128x128",
+          "purpose": "any"
+        },{
+          "src": "icons/150x150.png",
+          "type": "image/png",
+          "sizes": "150x150",
+          "purpose": "any"
+        },{
+          "src": "icons/apple-touch-icon.png",
+          "type": "image/png",
+          "sizes": "180x180",
+          "purpose": "any"
+        },{
+          "src": "icons/192x192.png",
+          "type": "image/png",
+          "sizes": "192x192",
+          "purpose": "any"
+        },{
+          "src": "icons/192x192.png",
+          "type": "image/png",
+          "sizes": "192x192",
+          "purpose": "maskable"
+        },{
+          "src": "icons/512x512.png",
+          "type": "image/png",
+          "sizes": "512x512",
+          "purpose": "any"
+        }],
+    "start_url": "/",
+    "lang": "it-IT",
+    "dir": "ltr",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#36c7b6",
+    "theme_color": "#000000",
+    "id": "/"
+  }
