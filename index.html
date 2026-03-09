@@ -56,6 +56,13 @@
         </label>
       </div>
 
+      <div class="grid" id="customTitleWrap" hidden>
+        <label>
+          Titolo (solo Personale)
+          <input id="customLeagueTitle" type="text" value="PERSONALE" placeholder="Inserisci il titolo della grafica">
+        </label>
+      </div>
+
       <div class="grid two-col">
         <label>
           Turno
@@ -95,9 +102,12 @@
         <div id="graphicScaleBox" class="graphic-scale-box">
           <div id="graphic" class="graphic">
             <header class="graphic-header">
-              <div>
+              <div class="graphic-heading">
                 <h2 id="previewLeague">SERIE A</h2>
                 <p id="previewMatchday">Pronostici esclusivi t.me/sportpredix - Giornata 1</p>
+              </div>
+              <div id="previewCompetitionLogoWrap" class="competition-logo-wrap">
+                <img id="previewCompetitionLogo" alt="">
               </div>
             </header>
             <div id="matchesList" class="matches-list"></div>

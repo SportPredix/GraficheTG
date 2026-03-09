@@ -5,17 +5,22 @@ const roundSelect = document.getElementById("roundSelect");
 const calendarTagInput = document.getElementById("calendarTag");
 const primaryColorInput = document.getElementById("primaryColor");
 const secondaryColorInput = document.getElementById("secondaryColor");
+const customTitleWrap = document.getElementById("customTitleWrap");
+const customLeagueTitleInput = document.getElementById("customLeagueTitle");
 
 const rowsEditor = document.getElementById("rowsEditor");
 const matchesList = document.getElementById("matchesList");
 const previewLeague = document.getElementById("previewLeague");
 const previewMatchday = document.getElementById("previewMatchday");
+const previewCompetitionLogoWrap = document.getElementById("previewCompetitionLogoWrap");
+const previewCompetitionLogo = document.getElementById("previewCompetitionLogo");
 const previewWrap = document.getElementById("previewWrap");
 const graphicScaleBox = document.getElementById("graphicScaleBox");
 const graphic = document.getElementById("graphic");
 
 const DEFAULT_SUBTITLE = "Pronostici esclusivi t.me/sportpredix";
 const GRAPHIC_BASE_WIDTH = 1200;
+const PERSONAL_COMPETITION_ID = "personale";
 
 const SPORTS = [
   { id: "calcio", label: "Calcio" },
@@ -130,6 +135,15 @@ const COMPETITIONS = [
   }
 ];
 
+const COMPETITION_LOGOS = {
+  "serie-a-2025-26": "./loghi campionati/seriea.png",
+  "premier-league-2025-26": "./loghi campionati/premierleague.png",
+  "la-liga-2025-26": "./loghi campionati/laliga.png",
+  "bundesliga-2025-26": "./loghi campionati/bundesliga.png",
+  "ligue-1-2025-26": "./loghi campionati/ligue1.png",
+  "champions-league-2025-26": "./loghi campionati/championsleague.png"
+};
+
 const state = {
   rows: [],
   currentSportId: SPORTS[0].id,
@@ -177,6 +191,56 @@ function getCompetitionConfig(competitionId = state.currentCompetitionId) {
 function getCalendarData(competitionId = state.currentCompetitionId) {
   const config = getCompetitionConfig(competitionId);
   return globalThis[config.dataKey] || null;
+}
+
+function isPersonalCompetition(competitionId = state.currentCompetitionId) {
+  return competitionId === PERSONAL_COMPETITION_ID;
+}
+
+function getCompetitionLogoUrl(competitionId = state.currentCompetitionId) {
+  return COMPETITION_LOGOS[competitionId] || "";
+}
+
+function setPreviewLogo(competitionId, leagueTitle) {
+  if (!previewCompetitionLogoWrap || !previewCompetitionLogo) {
+    return;
+  }
+
+  const logoUrl = getCompetitionLogoUrl(competitionId);
+  if (!logoUrl) {
+    previewCompetitionLogoWrap.classList.remove("has-logo");
+    previewCompetitionLogo.removeAttribute("src");
+    previewCompetitionLogo.removeAttribute("alt");
+    return;
+  }
+
+  previewCompetitionLogo.alt = `Logo ${leagueTitle}`;
+  const normalizedLogoUrl = encodeURI(logoUrl);
+
+  if (previewCompetitionLogo.getAttribute("src") !== normalizedLogoUrl) {
+    previewCompetitionLogo.src = normalizedLogoUrl;
+  }
+
+  previewCompetitionLogoWrap.classList.add("has-logo");
+}
+
+function updateCustomTitleUi(competitionId = state.currentCompetitionId) {
+  if (!customTitleWrap || !customLeagueTitleInput) {
+    return;
+  }
+
+  const isPersonal = isPersonalCompetition(competitionId);
+  customTitleWrap.hidden = !isPersonal;
+
+  if (!isPersonal) {
+    return;
+  }
+
+  if (!customLeagueTitleInput.value.trim()) {
+    customLeagueTitleInput.value = "PERSONALE";
+  }
+
+  calendarTagInput.value = customLeagueTitleInput.value.trim();
 }
 
 function getRoundIds(calendarData) {
@@ -327,6 +391,9 @@ function loadSport(sportId, options = {}) {
     competitionSelect.innerHTML = "";
     roundSelect.innerHTML = "";
     calendarTagInput.value = "";
+    if (customTitleWrap) {
+      customTitleWrap.hidden = true;
+    }
     matchdayInput.value = DEFAULT_SUBTITLE;
     renderEditor();
     renderPreview();
@@ -359,6 +426,8 @@ function loadCompetition(competitionId, options = {}) {
     secondaryColorInput.value = config.colors.secondary;
   }
 
+  updateCustomTitleUi(config.id);
+
   const calendarData = getCalendarData(config.id);
   if (!calendarData) {
     calendarTagInput.value = config.label;
@@ -371,7 +440,12 @@ function loadCompetition(competitionId, options = {}) {
     return;
   }
 
-  calendarTagInput.value = `${calendarData.league || config.label} ${calendarData.season || ""}`.trim();
+  if (isPersonalCompetition(config.id)) {
+    calendarTagInput.value = customLeagueTitleInput.value.trim() || "PERSONALE";
+  } else {
+    calendarTagInput.value = `${calendarData.league || config.label} ${calendarData.season || ""}`.trim();
+  }
+
   populateRoundSelect(calendarData);
 
   const roundIds = getRoundIds(calendarData);
@@ -467,9 +541,14 @@ function matchRowTemplate(row) {
 
 function renderPreview() {
   const calendarData = getCalendarData();
-  const competitionLabel = getCompetitionConfig().label;
+  const competitionConfig = getCompetitionConfig();
+  const competitionLabel = competitionConfig.label;
+  const leagueTitle = isPersonalCompetition(competitionConfig.id)
+    ? (customLeagueTitleInput?.value.trim() || "PERSONALE")
+    : (calendarData?.league || competitionLabel);
 
-  previewLeague.textContent = calendarData?.league || competitionLabel.toUpperCase();
+  previewLeague.textContent = leagueTitle.toUpperCase();
+  setPreviewLogo(competitionConfig.id, leagueTitle);
 
   if (!matchdayInput.value.trim() && state.currentRoundId) {
     previewMatchday.textContent = buildDefaultSubtitle(calendarData, state.currentRoundId);
@@ -559,6 +638,19 @@ async function downloadPng() {
 function boot() {
   populateSportSelect();
   matchdayInput.value = DEFAULT_SUBTITLE;
+
+  if (previewCompetitionLogo) {
+    previewCompetitionLogo.addEventListener("load", () => {
+      previewCompetitionLogoWrap?.classList.add("has-logo");
+    });
+
+    previewCompetitionLogo.addEventListener("error", () => {
+      previewCompetitionLogoWrap?.classList.remove("has-logo");
+      previewCompetitionLogo.removeAttribute("src");
+      previewCompetitionLogo.removeAttribute("alt");
+    });
+  }
+
   loadSport(SPORTS[0].id, { forceFresh: true });
 
   sportSelect.addEventListener("change", () => {
@@ -576,6 +668,17 @@ function boot() {
   [matchdayInput, primaryColorInput, secondaryColorInput].forEach((input) => {
     input.addEventListener("input", renderPreview);
   });
+
+  if (customLeagueTitleInput) {
+    customLeagueTitleInput.addEventListener("input", () => {
+      if (!isPersonalCompetition()) {
+        return;
+      }
+
+      calendarTagInput.value = customLeagueTitleInput.value.trim() || "PERSONALE";
+      renderPreview();
+    });
+  }
 
   document.getElementById("addRow").addEventListener("click", () => {
     state.rows.push(createRow());

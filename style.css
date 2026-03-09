@@ -273,12 +273,17 @@ button.accent {
 
 .graphic-header {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
+  gap: 16px;
   background: rgba(0, 0, 0, 0.22);
   border-radius: 16px;
   padding: 12px 20px;
   margin-bottom: 14px;
+}
+
+.graphic-heading {
+  min-width: 0;
 }
 
 .graphic-header h2 {
@@ -294,6 +299,25 @@ button.accent {
   font-size: 1rem;
   font-weight: 600;
   color: #e8fffc;
+}
+
+.competition-logo-wrap {
+  display: none;
+  flex: 0 0 auto;
+  line-height: 0;
+}
+
+.competition-logo-wrap img {
+  display: block;
+  max-width: 120px;
+  max-height: 88px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.competition-logo-wrap.has-logo {
+  display: block;
 }
 
 .matches-list {
@@ -398,5 +422,10 @@ button.accent {
 
   .preview-wrap {
     padding: 10px;
+  }
+
+  .competition-logo-wrap img {
+    max-width: 84px;
+    max-height: 62px;
   }
 }
