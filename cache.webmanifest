@@ -43,13 +43,13 @@
           "sizes": "512x512",
           "purpose": "any"
         }],
-    "start_url": "/",
+    "start_url": "/GraficheTG/",
     "lang": "it-IT",
     "dir": "ltr",
-    "scope": "/",
+    "scope": "/GraficheTG/",
     "display": "standalone",
     "orientation": "portrait",
     "background_color": "#36c7b6",
     "theme_color": "#000000",
-    "id": "/"
+    "id": "/GraficheTG/"
   }
