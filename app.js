@@ -1,4 +1,5 @@
-﻿const competitionSelect = document.getElementById("competitionSelect");
+const sportSelect = document.getElementById("sportSelect");
+const competitionSelect = document.getElementById("competitionSelect");
 const matchdayInput = document.getElementById("matchday");
 const roundSelect = document.getElementById("roundSelect");
 const calendarTagInput = document.getElementById("calendarTag");
@@ -16,86 +17,112 @@ const graphic = document.getElementById("graphic");
 const DEFAULT_SUBTITLE = "Pronostici esclusivi t.me/sportpredix";
 const GRAPHIC_BASE_WIDTH = 1200;
 
+const SPORTS = [
+  { id: "calcio", label: "Calcio" },
+  { id: "tennis", label: "Tennis" }
+];
+
 const COMPETITIONS = [
   {
+    sportId: "calcio",
     id: "serie-a-2025-26",
     label: "Serie A 2025/26",
     dataKey: "SERIE_A_2025_26",
     colors: { primary: "#004aac", secondary: "#2ea6ff" }
   },
   {
+    sportId: "calcio",
     id: "premier-league-2025-26",
     label: "Premier League 2025/26",
     dataKey: "PREMIER_LEAGUE_2025_26",
     colors: { primary: "#2d0a4b", secondary: "#ff2c8f" }
   },
   {
+    sportId: "calcio",
     id: "la-liga-2025-26",
     label: "La Liga 2025/26",
     dataKey: "LA_LIGA_2025_26",
     colors: { primary: "#ff5a00", secondary: "#ffb200" }
   },
   {
+    sportId: "calcio",
     id: "bundesliga-2025-26",
     label: "Bundesliga 2025/26",
     dataKey: "BUNDESLIGA_2025_26",
     colors: { primary: "#181818", secondary: "#d90429" }
   },
   {
+    sportId: "calcio",
     id: "ligue-1-2025-26",
     label: "Ligue 1 2025/26",
     dataKey: "LIGUE_1_2025_26",
     colors: { primary: "#0a1f44", secondary: "#c6f600" }
   },
   {
+    sportId: "calcio",
     id: "champions-league-2025-26",
     label: "Champions League 2025/26",
     dataKey: "CHAMPIONS_LEAGUE_2025_26",
     colors: { primary: "#0a1e5e", secondary: "#2e86ff" }
   },
   {
+    sportId: "calcio",
     id: "europa-league-2024-25",
     label: "Europa League 2024/25",
     dataKey: "EUROPA_LEAGUE_2024_25",
     colors: { primary: "#171717", secondary: "#ff7b00" }
   },
   {
+    sportId: "calcio",
     id: "conference-league-2024-25",
     label: "Conference League 2024/25",
     dataKey: "CONFERENCE_LEAGUE_2024_25",
     colors: { primary: "#0f1f14", secondary: "#18b56a" }
   },
   {
+    sportId: "calcio",
     id: "coppa-italia-2024-25",
     label: "Coppa Italia 2024/25",
     dataKey: "COPPA_ITALIA_2024_25",
     colors: { primary: "#0072ce", secondary: "#00a884" }
   },
   {
+    sportId: "calcio",
     id: "fa-cup-2024-25",
     label: "FA Cup 2024/25",
     dataKey: "FA_CUP_2024_25",
     colors: { primary: "#114e96", secondary: "#d71a2f" }
   },
   {
+    sportId: "calcio",
     id: "copa-del-rey-2024-25",
     label: "Copa del Rey 2024/25",
     dataKey: "COPA_DEL_REY_2024_25",
     colors: { primary: "#a3121f", secondary: "#f4b400" }
   },
   {
+    sportId: "calcio",
     id: "dfb-pokal-2024-25",
     label: "DFB Pokal 2024/25",
     dataKey: "DFB_POKAL_2024_25",
     colors: { primary: "#111111", secondary: "#e4002b" }
   },
   {
+    sportId: "calcio",
     id: "coupe-de-france-2024-25",
     label: "Coupe de France 2024/25",
     dataKey: "COUPE_DE_FRANCE_2024_25",
     colors: { primary: "#1f4aa8", secondary: "#de2033" }
   },
   {
+    sportId: "tennis",
+    id: "indian-wells-2026",
+    label: "Indian Wells 2026",
+    dataKey: "INDIAN_WELLS_2026",
+    colors: { primary: "#1f3b7a", secondary: "#ffb300" }
+  },
+  {
+    sportId: "calcio",
     id: "personale",
     label: "Personale",
     dataKey: "PERSONAL_LEAGUE",
@@ -105,7 +132,8 @@ const COMPETITIONS = [
 
 const state = {
   rows: [],
-  currentCompetitionId: COMPETITIONS[0].id,
+  currentSportId: SPORTS[0].id,
+  currentCompetitionId: COMPETITIONS.find((item) => item.sportId === SPORTS[0].id)?.id || COMPETITIONS[0].id,
   currentRoundId: "",
   roundCache: {}
 };
@@ -134,8 +162,16 @@ function cloneRows(rows) {
   return rows.map((row) => createRow(row));
 }
 
+function getCompetitionsForSport(sportId = state.currentSportId) {
+  return COMPETITIONS.filter((item) => item.sportId === sportId);
+}
+
+function getDefaultCompetitionForSport(sportId = state.currentSportId) {
+  return getCompetitionsForSport(sportId)[0] || COMPETITIONS[0];
+}
+
 function getCompetitionConfig(competitionId = state.currentCompetitionId) {
-  return COMPETITIONS.find((item) => item.id === competitionId) || COMPETITIONS[0];
+  return COMPETITIONS.find((item) => item.id === competitionId) || getDefaultCompetitionForSport(state.currentSportId);
 }
 
 function getCalendarData(competitionId = state.currentCompetitionId) {
@@ -192,6 +228,7 @@ function getRoundLabel(calendarData, roundId) {
 function buildDefaultSubtitle(calendarData, roundId) {
   const roundKey = String(roundId || "");
   const roundLabel = getRoundLabel(calendarData, roundKey);
+  const roundTerm = calendarData?.roundTerm || "Giornata";
 
   let suffix = roundKey;
   if (!/^\d+$/.test(suffix)) {
@@ -199,11 +236,18 @@ function buildDefaultSubtitle(calendarData, roundId) {
     suffix = labelNumber ? labelNumber[0] : roundLabel;
   }
 
-  return `${DEFAULT_SUBTITLE} - Giornata ${suffix}`;
+  return `${DEFAULT_SUBTITLE} - ${roundTerm} ${suffix}`;
 }
 
-function populateCompetitionSelect() {
-  competitionSelect.innerHTML = COMPETITIONS
+function populateSportSelect() {
+  sportSelect.innerHTML = SPORTS
+    .map((sport) => `<option value="${sport.id}">${escapeHtml(sport.label)}</option>`)
+    .join("");
+}
+
+function populateCompetitionSelect(sportId = state.currentSportId) {
+  const competitions = getCompetitionsForSport(sportId);
+  competitionSelect.innerHTML = competitions
     .map((competition) => `<option value="${competition.id}">${escapeHtml(competition.label)}</option>`)
     .join("");
 }
@@ -239,6 +283,7 @@ function loadRound(roundId, options = {}) {
   const calendarData = getCalendarData();
   const roundIds = getRoundIds(calendarData);
   if (!roundIds.length) {
+    state.currentRoundId = "";
     state.rows = [];
     renderEditor();
     renderPreview();
@@ -267,8 +312,45 @@ function loadRound(roundId, options = {}) {
   saveCurrentRoundCache();
 }
 
+function loadSport(sportId, options = {}) {
+  const selectedSport = SPORTS.some((item) => item.id === sportId) ? sportId : SPORTS[0].id;
+  const sportCompetitions = getCompetitionsForSport(selectedSport);
+
+  state.currentSportId = selectedSport;
+  sportSelect.value = selectedSport;
+  populateCompetitionSelect(selectedSport);
+
+  if (!sportCompetitions.length) {
+    state.currentCompetitionId = "";
+    state.currentRoundId = "";
+    state.rows = [];
+    competitionSelect.innerHTML = "";
+    roundSelect.innerHTML = "";
+    calendarTagInput.value = "";
+    matchdayInput.value = DEFAULT_SUBTITLE;
+    renderEditor();
+    renderPreview();
+    return;
+  }
+
+  const targetCompetitionId = options.competitionId && sportCompetitions.some((item) => item.id === options.competitionId)
+    ? options.competitionId
+    : sportCompetitions[0].id;
+
+  loadCompetition(targetCompetitionId, {
+    forceFresh: options.forceFresh || false,
+    roundId: options.roundId
+  });
+}
+
 function loadCompetition(competitionId, options = {}) {
   const config = getCompetitionConfig(competitionId);
+  if (config.sportId !== state.currentSportId) {
+    state.currentSportId = config.sportId;
+    sportSelect.value = config.sportId;
+    populateCompetitionSelect(config.sportId);
+  }
+
   state.currentCompetitionId = config.id;
   competitionSelect.value = config.id;
 
@@ -281,6 +363,7 @@ function loadCompetition(competitionId, options = {}) {
   if (!calendarData) {
     calendarTagInput.value = config.label;
     roundSelect.innerHTML = "";
+    state.currentRoundId = "";
     state.rows = [];
     matchdayInput.value = DEFAULT_SUBTITLE;
     renderEditor();
@@ -474,9 +557,13 @@ async function downloadPng() {
 }
 
 function boot() {
-  populateCompetitionSelect();
+  populateSportSelect();
   matchdayInput.value = DEFAULT_SUBTITLE;
-  loadCompetition(COMPETITIONS[0].id, { forceFresh: true });
+  loadSport(SPORTS[0].id, { forceFresh: true });
+
+  sportSelect.addEventListener("change", () => {
+    loadSport(sportSelect.value, { forceFresh: false });
+  });
 
   competitionSelect.addEventListener("change", () => {
     loadCompetition(competitionSelect.value, { forceFresh: false });
