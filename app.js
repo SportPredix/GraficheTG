@@ -5,6 +5,9 @@ const roundSelect = document.getElementById("roundSelect");
 const calendarTagInput = document.getElementById("calendarTag");
 const primaryColorInput = document.getElementById("primaryColor");
 const secondaryColorInput = document.getElementById("secondaryColor");
+const threeByThreeColorsWrap = document.getElementById("threeByThreeColors");
+const accentColorInput = document.getElementById("accentColor");
+const cardColorInput = document.getElementById("cardColor");
 const customTitleWrap = document.getElementById("customTitleWrap");
 const customLeagueTitleInput = document.getElementById("customLeagueTitle");
 
@@ -17,6 +20,7 @@ const previewCompetitionLogo = document.getElementById("previewCompetitionLogo")
 const previewWrap = document.getElementById("previewWrap");
 const graphicScaleBox = document.getElementById("graphicScaleBox");
 const graphic = document.getElementById("graphic");
+const addRowButton = document.getElementById("addRow");
 
 const DEFAULT_SUBTITLE = "Pronostici esclusivi t.me/sportpredix";
 const GRAPHIC_BASE_WIDTH = 1200;
@@ -83,6 +87,16 @@ const COMPETITIONS = [
     label: "Conference League 2024/25",
     dataKey: "CONFERENCE_LEAGUE_2024_25",
     colors: { primary: "#0f1f14", secondary: "#18b56a" }
+  },
+  {
+    sportId: "calcio",
+    id: "three-by-three",
+    label: "3 x 3",
+    dataKey: "THREE_BY_THREE",
+    variant: "three-by-three",
+    rowLimit: 3,
+    rowFixed: true,
+    colors: { primary: "#0f1217", secondary: "#1f1d2a", accent: "#f06a1b", card: "#0e1116" }
   },
   {
     sportId: "calcio",
@@ -162,6 +176,42 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function normalizeHexColor(value, fallback = "#000000") {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  if (/^#[0-9a-f]{6}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
+  if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+    const [r, g, b] = trimmed.slice(1).split("");
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+  }
+
+  return fallback;
+}
+
+function hexToRgba(hex, alpha = 1) {
+  const normalized = normalizeHexColor(hex);
+  const r = parseInt(normalized.slice(1, 3), 16);
+  const g = parseInt(normalized.slice(3, 5), 16);
+  const b = parseInt(normalized.slice(5, 7), 16);
+  const clampedAlpha = Math.min(1, Math.max(0, alpha));
+  return `rgba(${r}, ${g}, ${b}, ${clampedAlpha})`;
+}
+
+function getReadableTextColor(hex) {
+  const normalized = normalizeHexColor(hex);
+  const r = parseInt(normalized.slice(1, 3), 16) / 255;
+  const g = parseInt(normalized.slice(3, 5), 16) / 255;
+  const b = parseInt(normalized.slice(5, 7), 16) / 255;
+  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return luminance > 0.62 ? "#0b0f12" : "#ffffff";
+}
+
 function createRow(data = {}) {
   return {
     id: data.id ?? ((globalThis.crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
@@ -196,6 +246,34 @@ function getCalendarData(competitionId = state.currentCompetitionId) {
 
 function isPersonalCompetition(competitionId = state.currentCompetitionId) {
   return competitionId === PERSONAL_COMPETITION_ID;
+}
+
+function getCompetitionVariant(competitionId = state.currentCompetitionId) {
+  return getCompetitionConfig(competitionId).variant || "default";
+}
+
+function getRowLimit(competitionId = state.currentCompetitionId) {
+  return getCompetitionConfig(competitionId).rowLimit || 0;
+}
+
+function isRowLimitFixed(competitionId = state.currentCompetitionId) {
+  return Boolean(getCompetitionConfig(competitionId).rowFixed);
+}
+
+function normalizeRowsForCompetition(rows, competitionId = state.currentCompetitionId) {
+  const rowLimit = getRowLimit(competitionId);
+  if (!rowLimit) {
+    return rows;
+  }
+
+  let nextRows = rows.slice(0, rowLimit);
+  if (isRowLimitFixed(competitionId)) {
+    while (nextRows.length < rowLimit) {
+      nextRows.push(createRow());
+    }
+  }
+
+  return nextRows;
 }
 
 function getCompetitionLogoUrl(competitionId = state.currentCompetitionId) {
@@ -242,6 +320,27 @@ function updateCustomTitleUi(competitionId = state.currentCompetitionId) {
   }
 
   calendarTagInput.value = customLeagueTitleInput.value.trim();
+}
+
+function updateThreeByThreeUi(competitionId = state.currentCompetitionId) {
+  if (!threeByThreeColorsWrap) {
+    return;
+  }
+
+  const isThreeByThree = getCompetitionVariant(competitionId) === "three-by-three";
+  threeByThreeColorsWrap.hidden = !isThreeByThree;
+
+  if (!isThreeByThree) {
+    return;
+  }
+
+  const colors = getCompetitionConfig(competitionId).colors || {};
+  if (accentColorInput && colors.accent) {
+    accentColorInput.value = colors.accent;
+  }
+  if (cardColorInput && colors.card) {
+    cardColorInput.value = colors.card;
+  }
 }
 
 function getRoundIds(calendarData) {
@@ -344,6 +443,7 @@ function saveCurrentRoundCache() {
 function loadRound(roundId, options = {}) {
   const forceFresh = options.forceFresh || false;
   const keepSubtitle = options.keepSubtitle || false;
+  const competitionConfig = getCompetitionConfig();
 
   const calendarData = getCalendarData();
   const roundIds = getRoundIds(calendarData);
@@ -367,6 +467,8 @@ function loadRound(roundId, options = {}) {
   } else {
     state.rows = getRoundRows(calendarData, selectedRound);
   }
+
+  state.rows = normalizeRowsForCompetition(state.rows, competitionConfig.id);
 
   if (!keepSubtitle) {
     matchdayInput.value = buildDefaultSubtitle(calendarData, selectedRound);
@@ -428,6 +530,7 @@ function loadCompetition(competitionId, options = {}) {
   }
 
   updateCustomTitleUi(config.id);
+  updateThreeByThreeUi(config.id);
 
   const calendarData = getCalendarData(config.id);
   if (!calendarData) {
@@ -491,6 +594,21 @@ function rowEditorTemplate(row, index) {
 
 function renderEditor() {
   rowsEditor.innerHTML = state.rows.map((row, index) => rowEditorTemplate(row, index)).join("");
+  const rowLimit = getRowLimit();
+  const rowFixed = isRowLimitFixed();
+
+  if (addRowButton) {
+    if (rowFixed) {
+      addRowButton.hidden = true;
+      addRowButton.disabled = true;
+    } else if (rowLimit && state.rows.length >= rowLimit) {
+      addRowButton.hidden = false;
+      addRowButton.disabled = true;
+    } else {
+      addRowButton.hidden = false;
+      addRowButton.disabled = false;
+    }
+  }
 
   const cards = rowsEditor.querySelectorAll(".row-editor");
   cards.forEach((card) => {
@@ -511,8 +629,13 @@ function renderEditor() {
 
     const removeButton = card.querySelector("button[data-action='remove']");
     if (removeButton) {
+      if (rowFixed) {
+        removeButton.hidden = true;
+      }
+
       removeButton.addEventListener("click", () => {
         state.rows = state.rows.filter((item) => item.id !== id);
+        state.rows = normalizeRowsForCompetition(state.rows);
         renderEditor();
         renderPreview();
         saveCurrentRoundCache();
@@ -540,16 +663,38 @@ function matchRowTemplate(row) {
   `;
 }
 
+function matchRowTemplateThreeByThree(row, index) {
+  const pickText = escapeHtml((row.pick || "-").toUpperCase());
+
+  return `
+    <div class="match-card">
+      <div class="match-card__meta">
+        <span class="match-card__tag">Match ${index + 1}</span>
+        <span class="match-card__date">${escapeHtml(row.date)}</span>
+        <span class="match-card__time">${escapeHtml(row.time)}</span>
+      </div>
+      <div class="match-card__teams">
+        <div class="match-card__team">${escapeHtml(row.homeTeam)}</div>
+        <div class="match-card__vs">VS</div>
+        <div class="match-card__team">${escapeHtml(row.awayTeam)}</div>
+      </div>
+      <div class="match-card__pick">${pickText}</div>
+    </div>
+  `;
+}
+
 function renderPreview() {
   const calendarData = getCalendarData();
   const competitionConfig = getCompetitionConfig();
   const competitionLabel = competitionConfig.label;
+  const variant = getCompetitionVariant(competitionConfig.id);
   const leagueTitle = isPersonalCompetition(competitionConfig.id)
     ? (customLeagueTitleInput?.value.trim() || "PERSONALE")
     : (calendarData?.league || competitionLabel);
 
   previewLeague.textContent = leagueTitle.toUpperCase();
   setPreviewLogo(competitionConfig.id, leagueTitle);
+  graphic.classList.toggle("graphic--three-by-three", variant === "three-by-three");
 
   if (!matchdayInput.value.trim() && state.currentRoundId) {
     previewMatchday.textContent = buildDefaultSubtitle(calendarData, state.currentRoundId);
@@ -559,6 +704,18 @@ function renderPreview() {
 
   graphic.style.setProperty("--primary", primaryColorInput.value);
   graphic.style.setProperty("--secondary", secondaryColorInput.value);
+
+  if (variant === "three-by-three") {
+    const accentColor = accentColorInput?.value || competitionConfig.colors?.accent || "#f06a1b";
+    const cardColor = cardColorInput?.value || competitionConfig.colors?.card || "#0e1116";
+    const normalizedAccent = normalizeHexColor(accentColor, "#f06a1b");
+    const normalizedCard = normalizeHexColor(cardColor, "#0e1116");
+
+    graphic.style.setProperty("--three-accent", normalizedAccent);
+    graphic.style.setProperty("--three-accent-soft", hexToRgba(normalizedAccent, 0.35));
+    graphic.style.setProperty("--three-accent-ink", getReadableTextColor(normalizedAccent));
+    graphic.style.setProperty("--three-card", hexToRgba(normalizedCard, 0.35));
+  }
 
   if (!state.rows.length) {
     matchesList.innerHTML = `
@@ -570,7 +727,8 @@ function renderPreview() {
     return;
   }
 
-  matchesList.innerHTML = state.rows.map(matchRowTemplate).join("");
+  const rowTemplate = variant === "three-by-three" ? matchRowTemplateThreeByThree : matchRowTemplate;
+  matchesList.innerHTML = state.rows.map((row, index) => rowTemplate(row, index)).join("");
   updatePreviewScale();
 }
 
@@ -666,9 +824,11 @@ function boot() {
     loadRound(roundSelect.value, { keepSubtitle: false });
   });
 
-  [matchdayInput, primaryColorInput, secondaryColorInput].forEach((input) => {
-    input.addEventListener("input", renderPreview);
-  });
+  [matchdayInput, primaryColorInput, secondaryColorInput, accentColorInput, cardColorInput]
+    .filter(Boolean)
+    .forEach((input) => {
+      input.addEventListener("input", renderPreview);
+    });
 
   if (customLeagueTitleInput) {
     customLeagueTitleInput.addEventListener("input", () => {
@@ -681,8 +841,9 @@ function boot() {
     });
   }
 
-  document.getElementById("addRow").addEventListener("click", () => {
+  addRowButton.addEventListener("click", () => {
     state.rows.push(createRow());
+    state.rows = normalizeRowsForCompetition(state.rows);
     renderEditor();
     renderPreview();
     saveCurrentRoundCache();
