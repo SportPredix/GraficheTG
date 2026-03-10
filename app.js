@@ -141,7 +141,8 @@ const COMPETITION_LOGOS = {
   "la-liga-2025-26": "./loghi campionati/laliga.png",
   "bundesliga-2025-26": "./loghi campionati/bundesliga.png",
   "ligue-1-2025-26": "./loghi campionati/ligue1.png",
-  "champions-league-2025-26": "./loghi campionati/championsleague.png"
+  "champions-league-2025-26": "./loghi campionati/championsleague.png",
+  "europa-league-2024-25": "./loghi campionati/europaleague.png"
 };
 
 const state = {
